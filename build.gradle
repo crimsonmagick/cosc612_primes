@@ -17,8 +17,13 @@ dependencies {
     testImplementation "org.spockframework:spock-core:2.4-M6-groovy-4.0"
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }}
+
 application {
-    mainClassName = 'dev.welbyseely.parallel.primes.PrimeCountRunner'
+    mainClass = 'dev.welbyseely.parallel.primes.PrimeCountRunner'
 }
 
 test {
