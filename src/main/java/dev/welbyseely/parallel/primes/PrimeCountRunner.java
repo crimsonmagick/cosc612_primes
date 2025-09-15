@@ -3,6 +3,7 @@ package dev.welbyseely.parallel.primes;
 
 import dev.welbyseely.parallel.primes.counter.PrimeCounter;
 import dev.welbyseely.parallel.primes.counter.PrimeCounterParallel;
+import dev.welbyseely.parallel.primes.counter.PrimeCounterSerial;
 import dev.welbyseely.parallel.primes.csv.MetricWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,8 +44,13 @@ public class PrimeCountRunner {
     threads[threads.length - 1] = processorCount;
 
     for (final int p : threads) {
-      final PrimeCounter parallel = new PrimeCounterParallel(p);
-      parallel.countPrimes(2000);
+      final PrimeCounter counter;
+      if (p == 1) {
+        counter = new PrimeCounterSerial();
+      } else {
+        counter = new PrimeCounterParallel(p);
+      }
+      counter.countPrimes(2000); // warmup
 
       for (int n = 2; n <= max_n; n *= 2) {
         int primeCount = 0;
@@ -52,7 +58,7 @@ public class PrimeCountRunner {
 
         for (int j = 0; j < SAMPLE_COUNT; j++) {
           final long startTime = System.nanoTime();
-          primeCount = parallel.countPrimes(n);
+          primeCount = counter.countPrimes(n);
           final long durationNs = System.nanoTime() - startTime;
           durations.add(durationNs);
         }
