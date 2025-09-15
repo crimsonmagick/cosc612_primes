@@ -3,39 +3,59 @@ package dev.welbyseely.parallel.primes;
 
 import dev.welbyseely.parallel.primes.counter.PrimeCounter;
 import dev.welbyseely.parallel.primes.counter.PrimeCounterParallel;
-import dev.welbyseely.parallel.primes.counter.PrimeCounterSerial;
+import dev.welbyseely.parallel.primes.csv.MetricWriter;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class PrimeCountRunner {
 
+  private static final int SAMPLE_COUNT = 5;
+
   public static void main(final String[] args) {
 
-    if (args.length < 1) {
-      System.err.println("Usage: PrimeCountRunner <number>");
+    if (args.length < 2) {
+      System.err.println("Usage: PrimeCountRunner <number> <logger_path>");
       System.exit(1);
     }
 
-    final int n;
+    final int max_n;
     try {
-      n = Integer.parseInt(args[0]);
+      max_n = Integer.parseInt(args[0]);
     } catch (final NumberFormatException e) {
       System.err.println("Input must be a valid number. Usage: PrimeCountRunner <number>");
       System.exit(1);
       return;
     }
 
-    final int cores = Runtime.getRuntime().availableProcessors();
+    final String loggerPath = args[1];
+    final MetricWriter writer = new MetricWriter(loggerPath);
 
-    final PrimeCounter parallel = new PrimeCounterParallel(cores);
-    long startTime = System.nanoTime();
-    final int parallelCount = parallel.countPrimes(n);
-    System.out.printf("Parallel: Number of primes between 2 and %d=%d, time=%d ns%n", n,
-        parallelCount, System.nanoTime() - startTime);
+    final int[] threads = {1, 2, 16, 32};
 
-    final PrimeCounter serial = new PrimeCounterSerial();
-    startTime = System.nanoTime();
-    final int serialCount = serial.countPrimes(n);
-    System.out.printf("Serial: Number of primes between 2 and %d=%d, time=%d ns%n", n, serialCount,
-        System.nanoTime() - startTime);
+    new PrimeCounterParallel(4).countPrimes(20); // warmup
+
+    for (final int p : threads) {
+      final PrimeCounter parallel = new PrimeCounterParallel(p);
+
+      for (int n = 2; n <= max_n; n++) {
+        int primeCount = 0;
+        final Collection<Long> durations = new ArrayList<>();
+
+        for (int j = 0; j < SAMPLE_COUNT; j++) {
+          final long startTime = System.nanoTime();
+          primeCount = parallel.countPrimes(n);
+          final long durationNs = System.nanoTime() - startTime;
+          durations.add(durationNs);
+        }
+
+        final double averageDurationNs = durations.stream()
+            .mapToLong(Long::longValue)
+            .average()
+            .orElseThrow(() -> new RuntimeException("Durations should not be empty"));
+
+        writer.write(p, n, primeCount, (long) averageDurationNs);
+      }
+    }
 
   }
 
