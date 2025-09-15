@@ -6,10 +6,11 @@ import dev.welbyseely.parallel.primes.counter.PrimeCounterParallel;
 import dev.welbyseely.parallel.primes.csv.MetricWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.IntStream;
 
 public class PrimeCountRunner {
 
-  private static final int SAMPLE_COUNT = 50;
+  private static final int SAMPLE_COUNT = 10;
 
   public static void main(final String[] args) {
 
@@ -30,14 +31,19 @@ public class PrimeCountRunner {
     final String loggerPath = args[1];
     final MetricWriter writer = new MetricWriter(loggerPath);
 
-    final int[] threads = {1, 2, 16, 32};
+    final int processorCount = Runtime.getRuntime().availableProcessors();
+    final int p_delta = Runtime.getRuntime().availableProcessors() / 4;
 
-    new PrimeCounterParallel(4).countPrimes(20); // warmup
+    final int[] threads = IntStream.iterate(1, i -> i + p_delta)
+      .limit(p_delta)
+      .toArray();
+    threads[threads.length - 1] = processorCount;
 
     for (final int p : threads) {
       final PrimeCounter parallel = new PrimeCounterParallel(p);
+      parallel.countPrimes(2000);
 
-      for (int n = 2; n <= max_n; n++) {
+      for (int n = 2; n <= max_n; n *= 2) {
         int primeCount = 0;
         final Collection<Long> durations = new ArrayList<>();
 
@@ -49,9 +55,9 @@ public class PrimeCountRunner {
         }
 
         final double averageDurationNs = durations.stream()
-            .mapToLong(Long::longValue)
-            .average()
-            .orElseThrow(() -> new RuntimeException("Durations should not be empty"));
+          .mapToLong(Long::longValue)
+          .average()
+          .orElseThrow(() -> new RuntimeException("Durations should not be empty"));
 
         writer.write(p, n, primeCount, (long) averageDurationNs);
       }
