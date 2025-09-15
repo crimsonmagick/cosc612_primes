@@ -31,11 +31,13 @@ public class PrimeCountRunner {
     final String loggerPath = args[1];
     final MetricWriter writer = new MetricWriter(loggerPath);
 
+    final int coreDivisor = 4;
+
     final int processorCount = Runtime.getRuntime().availableProcessors();
-    final int p_delta = Runtime.getRuntime().availableProcessors() / 4;
+    final int p_delta = processorCount / coreDivisor;
 
     final int[] threads = IntStream.iterate(1, i -> i + p_delta)
-      .limit(p_delta)
+      .limit(coreDivisor)
       .toArray();
     threads[threads.length - 1] = processorCount;
 
