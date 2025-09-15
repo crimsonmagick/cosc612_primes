@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 
 public class PrimeCountRunner {
 
-  private static final int SAMPLE_COUNT = 10;
+  private static final int SAMPLE_COUNT = 100;
 
   public static void main(final String[] args) {
 
