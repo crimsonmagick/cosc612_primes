@@ -9,7 +9,7 @@ import java.util.Collection;
 
 public class PrimeCountRunner {
 
-  private static final int SAMPLE_COUNT = 5;
+  private static final int SAMPLE_COUNT = 50;
 
   public static void main(final String[] args) {
 
