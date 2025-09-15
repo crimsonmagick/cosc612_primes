@@ -36,9 +36,10 @@ public class PrimeCountRunner {
     final int processorCount = Runtime.getRuntime().availableProcessors();
     final int p_delta = processorCount / coreDivisor;
 
-    final int[] threads = IntStream.iterate(1, i -> i + p_delta)
+    final int[] threads = IntStream.iterate(0, i -> i + p_delta)
       .limit(coreDivisor)
       .toArray();
+    threads[0] = 1;
     threads[threads.length - 1] = processorCount;
 
     for (final int p : threads) {
